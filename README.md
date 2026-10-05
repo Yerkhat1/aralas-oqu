@@ -31,7 +31,7 @@ modules and one stylesheet. In Claude Code the dev server is also registered in
 
 ```bash
 node test/phonology.test.mjs
-node --test test/unit/
+node --test test/unit/*.test.mjs
 ```
 
 64 assertions against attested forms from standard Kazakh grammar, plus 37 tests over the grader and the scheduler. Run this before

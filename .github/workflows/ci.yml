@@ -14,4 +14,4 @@ jobs:
       - name: Phonology rules against attested forms
         run: node test/phonology.test.mjs
       - name: Grader and scheduler
-        run: node --test test/unit/
+        run: node --test test/unit/*.test.mjs
