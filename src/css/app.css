@@ -1,0 +1,543 @@
+/*
+ * app.css — Aralas design system.
+ *
+ * Layout decisions worth stating, because they are the ones that break language apps:
+ *
+ * 1. ONE COLUMN, PHONE-WIDTH, ALWAYS. Capped at 560px even on a 27" monitor. Practice
+ *    is a thumb activity; a responsive grid that reflows into three columns on desktop
+ *    just makes the answer buttons land where nobody's hand is.
+ *
+ * 2. THE ANSWER AREA IS PINNED TO THE BOTTOM. Prompt at the top, options in the middle,
+ *    action bar fixed above the safe-area inset. The learner's eye and thumb never
+ *    have to hunt, and the layout does not jump when a feedback banner appears —
+ *    the banner occupies reserved space rather than pushing content.
+ *
+ * 3. KAZAKH TEXT GETS ITS OWN TYPE SCALE. ә ө ұ ү і ң are visually distinguished from
+ *    а о у и н by small marks. At 16px on a cheap phone screen those marks disappear,
+ *    and the learner cannot see the exact thing being taught. Target-language text is
+ *    never below 22px, and is set in a font verified to carry the full Kazakh block.
+ *
+ * 4. NO LIVES, NO HEARTS. Progress is a bar that only moves forward. The reference
+ *    brief asks to celebrate completion rather than punish mistakes; a life counter is
+ *    the mechanic that most directly contradicts that.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Brand — carried over from the existing Aralas demo so the two read as one product */
+  --kz: #12b3a0;
+  --kz-strong: #0e9184;
+  --amb: #e8a317;
+  --violet: #6d6ef4;
+
+  --ok: #1a9c5f;
+  --ok-bg: rgba(26, 156, 95, .12);
+  --warn: #b8791a;
+  --warn-bg: rgba(232, 163, 23, .14);
+  --bad: #d1473f;
+  --bad-bg: rgba(209, 71, 63, .11);
+
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --surface-2: #f1f3f6;
+  --ink: #131722;
+  --ink-2: #5a6478;
+  --ink-3: #8b94a6;
+  --line: #e2e6ed;
+  --line-2: #cdd4e0;
+
+  --r-sm: 10px;
+  --r: 14px;
+  --r-lg: 20px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 8px 24px rgba(16, 24, 40, .06);
+  --shadow-press: 0 1px 2px rgba(16, 24, 40, .1);
+
+  --col: 560px;
+  --bar-h: 76px;
+
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0e15;
+    --surface: #141924;
+    --surface-2: #1c2230;
+    --ink: #eaeef7;
+    --ink-2: #a3aec2;
+    --ink-3: #6f7a90;
+    --line: #242b3a;
+    --line-2: #333c50;
+    --kz: #2dd4bf;
+    --kz-strong: #5eead4;
+    --amb: #f5b942;
+    --ok: #3ecf8e;
+    --ok-bg: rgba(62, 207, 142, .14);
+    --warn: #f5b942;
+    --warn-bg: rgba(245, 185, 66, .14);
+    --bad: #f4726a;
+    --bad-bg: rgba(244, 114, 106, .14);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b0e15; --surface: #141924; --surface-2: #1c2230;
+  --ink: #eaeef7; --ink-2: #a3aec2; --ink-3: #6f7a90;
+  --line: #242b3a; --line-2: #333c50;
+  --kz: #2dd4bf; --kz-strong: #5eead4; --amb: #f5b942;
+  --ok: #3ecf8e; --ok-bg: rgba(62,207,142,.14);
+  --warn: #f5b942; --warn-bg: rgba(245,185,66,.14);
+  --bad: #f4726a; --bad-bg: rgba(244,114,106,.14);
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+  overscroll-behavior-y: contain;
+}
+
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; border: none; background: none; }
+
+.num { font-variant-numeric: tabular-nums; }
+
+/* Target-language text: never small, never a fallback font. */
+.kk {
+  font-feature-settings: 'ss01';
+  letter-spacing: -.01em;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * Shell
+ * ------------------------------------------------------------------ */
+
+/* App-shell: the frame is exactly the viewport and every region scrolls inside it.
+ * Without a bounded height the session's `overflow-y` regions have nothing to
+ * measure against and the action bar walks off the bottom of the page. */
+.app {
+  max-width: var(--col);
+  margin: 0 auto;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.screen { display: none; flex: 1; flex-direction: column; }
+.screen.active { display: flex; }
+
+.scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px calc(var(--bar-h) + env(safe-area-inset-bottom) + 16px);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ------------------------------------------------------------------ *
+ * Top bar
+ * ------------------------------------------------------------------ */
+
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand { display: flex; align-items: center; gap: 9px; margin-right: auto; }
+.glyph {
+  width: 30px; height: 30px; border-radius: 9px; flex: none;
+  background: linear-gradient(135deg, var(--kz), var(--violet));
+  display: grid; place-items: center;
+  color: #fff; font-weight: 800; font-size: 13px;
+}
+.brand-name { font-weight: 700; font-size: 17px; letter-spacing: -.02em; }
+
+.stat {
+  display: flex; align-items: center; gap: 5px;
+  font-weight: 700; font-size: 14px;
+}
+.stat-streak { color: var(--amb); }
+.stat-xp { color: var(--kz); }
+
+/* Daily-goal ring */
+.ring { width: 30px; height: 30px; flex: none; }
+.ring circle { fill: none; stroke-width: 3.5; }
+.ring .track { stroke: var(--line-2); }
+.ring .fill {
+  stroke: var(--kz); stroke-linecap: round;
+  transform: rotate(-90deg); transform-origin: 50% 50%;
+  transition: stroke-dasharray .5s cubic-bezier(.2, .8, .2, 1);
+}
+
+/* ------------------------------------------------------------------ *
+ * Bottom nav
+ * ------------------------------------------------------------------ */
+
+.nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: var(--col); z-index: 30;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* `display:grid` on the class outranks the UA's `[hidden]` rule, so state it here. */
+.nav[hidden] { display: none; }
+
+.nav button {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 10px 4px 8px;
+  font-size: 11px; font-weight: 600;
+  color: var(--ink-3);
+  transition: color .15s;
+}
+.nav button svg { width: 21px; height: 21px; stroke-width: 1.9; }
+.nav button[aria-current="page"] { color: var(--kz); }
+.nav .badge {
+  position: absolute; transform: translate(16px, -4px);
+  min-width: 17px; height: 17px; padding: 0 4px;
+  border-radius: 9px; background: var(--amb); color: #12161f;
+  font-size: 10px; font-weight: 800; line-height: 17px; text-align: center;
+}
+
+/* ------------------------------------------------------------------ *
+ * Cards & the unit path
+ * ------------------------------------------------------------------ */
+
+.section-label {
+  font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-3); margin: 22px 2px 10px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+}
+
+.hero {
+  padding: 18px;
+  display: flex; align-items: center; gap: 14px;
+  margin-top: 14px;
+}
+.hero-body { flex: 1; min-width: 0; }
+.hero h2 { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+.hero p { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+
+.unit {
+  display: flex; align-items: center; gap: 13px;
+  width: 100%; text-align: left;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  transition: transform .12s, box-shadow .12s;
+}
+.unit:active { transform: translateY(1px); box-shadow: var(--shadow-press); }
+.unit[disabled] { opacity: .5; box-shadow: none; cursor: not-allowed; }
+
+.unit-icon {
+  width: 46px; height: 46px; flex: none;
+  border-radius: 14px; background: var(--surface-2);
+  display: grid; place-items: center; font-size: 22px;
+}
+.unit-body { flex: 1; min-width: 0; }
+.unit-title { font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+.unit-sub { font-size: 12.5px; color: var(--ink-3); margin-top: 1px; }
+
+.bar {
+  height: 6px; border-radius: 3px; background: var(--surface-2);
+  overflow: hidden; margin-top: 8px;
+}
+.bar > i {
+  display: block; height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--kz), var(--kz-strong));
+  transition: width .45s cubic-bezier(.2, .8, .2, 1);
+}
+
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--surface-2); color: var(--ink-2);
+  font-size: 11.5px; font-weight: 600;
+}
+.chip.due { background: var(--warn-bg); color: var(--warn); }
+
+/* ------------------------------------------------------------------ *
+ * Session
+ * ------------------------------------------------------------------ */
+
+.session-top {
+  display: flex; align-items: center; gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+}
+.icon-btn {
+  width: 34px; height: 34px; flex: none; border-radius: 10px;
+  display: grid; place-items: center; color: var(--ink-3);
+  background: var(--surface-2);
+}
+.session-bar { flex: 1; height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.session-bar > i {
+  display: block; height: 100%; border-radius: 5px;
+  background: linear-gradient(90deg, var(--kz), var(--violet));
+  transition: width .35s cubic-bezier(.2, .8, .2, 1);
+}
+
+/* Scrolls independently so a long feedback panel shrinks the question area
+ * instead of pushing the action bar off-screen. */
+.q {
+  padding: 8px 16px 0;
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+
+.q-kind {
+  font-size: 12.5px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--ink-3);
+  margin-bottom: 14px;
+}
+
+/* The prompt: the largest thing on screen, always. */
+.q-prompt {
+  font-size: 34px; font-weight: 700; letter-spacing: -.025em;
+  line-height: 1.2; margin-bottom: 4px;
+  overflow-wrap: anywhere;
+}
+.q-prompt.small { font-size: 26px; }
+.q-sub { font-size: 14px; color: var(--ink-2); margin-bottom: 20px; }
+
+/* Suffix drill: stem + a slot the ending drops into */
+.slot-line {
+  display: flex; align-items: baseline; gap: 2px; flex-wrap: wrap;
+  font-size: 34px; font-weight: 700; letter-spacing: -.025em;
+  margin-bottom: 6px;
+}
+.slot {
+  min-width: 76px; padding: 0 10px;
+  border-bottom: 3px dashed var(--line-2);
+  color: var(--ink-3); text-align: center;
+}
+.slot.filled { border-bottom-style: solid; border-bottom-color: var(--kz); color: var(--kz); }
+
+.options { display: flex; flex-direction: column; gap: 9px; margin-top: auto; padding-bottom: 12px; }
+
+.opt {
+  display: flex; align-items: center; gap: 11px;
+  width: 100%; text-align: left;
+  padding: 15px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--line-2);
+  border-radius: var(--r);
+  font-size: 17px; font-weight: 600;
+  transition: transform .1s, border-color .15s, background .15s;
+}
+.opt:active { transform: translateY(1px); }
+.opt[aria-pressed="true"] { border-color: var(--kz); background: color-mix(in srgb, var(--kz) 8%, var(--surface)); }
+.opt.is-correct { border-color: var(--ok); background: var(--ok-bg); color: var(--ok); }
+.opt.is-wrong { border-color: var(--bad); background: var(--bad-bg); color: var(--bad); }
+.opt[disabled] { cursor: default; }
+
+.opt-key {
+  width: 24px; height: 24px; flex: none; border-radius: 7px;
+  background: var(--surface-2); color: var(--ink-3);
+  font-size: 12px; font-weight: 700;
+  display: grid; place-items: center;
+}
+
+/* Free-text answer */
+.answer-wrap { margin-top: auto; padding-bottom: 12px; }
+.answer {
+  width: 100%; padding: 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--line-2);
+  border-radius: var(--r);
+  font-size: 24px; font-weight: 600;
+  outline: none;
+  transition: border-color .15s;
+}
+.answer:focus { border-color: var(--kz); }
+.answer.is-correct { border-color: var(--ok); color: var(--ok); }
+.answer.is-wrong { border-color: var(--bad); color: var(--bad); }
+.answer::placeholder { color: var(--ink-3); font-weight: 500; font-size: 17px; }
+
+/*
+ * The Kazakh letter bar. Nine letters that do not exist on a Russian or English
+ * keyboard — without this row, a typing exercise is untypable for most learners
+ * in Kazakhstan, who are on a Russian layout.
+ */
+.kbd {
+  display: grid; grid-template-columns: repeat(9, 1fr);
+  gap: 5px; margin-top: 9px;
+}
+.kbd button {
+  padding: 11px 0;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: 19px; font-weight: 600;
+  transition: transform .08s, background .12s;
+}
+.kbd button:active { transform: scale(.94); background: var(--kz); color: #fff; }
+.kbd-hint { font-size: 11.5px; color: var(--ink-3); margin-top: 7px; text-align: center; }
+
+/* ------------------------------------------------------------------ *
+ * Action bar + feedback
+ * ------------------------------------------------------------------ */
+
+.actionbar {
+  flex: none;
+  max-height: 62dvh;
+  overflow-y: auto;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+.actionbar.ok { background: var(--ok-bg); border-top-color: transparent; }
+.actionbar.warn { background: var(--warn-bg); border-top-color: transparent; }
+.actionbar.bad { background: var(--bad-bg); border-top-color: transparent; }
+
+.btn {
+  width: 100%; padding: 15px;
+  border-radius: var(--r);
+  background: var(--kz); color: #fff;
+  font-size: 16px; font-weight: 700; letter-spacing: .01em;
+  transition: transform .1s, opacity .15s;
+}
+.btn:active { transform: translateY(1px); }
+.btn[disabled] { opacity: .4; cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--ink-3); font-weight: 600; padding: 11px; }
+.btn.ok { background: var(--ok); }
+.btn.bad { background: var(--bad); }
+/* Amber needs dark text to stay readable at AA. */
+.btn.warn { background: var(--amb); color: #12161f; }
+
+.verdict { display: flex; align-items: center; gap: 9px; margin-bottom: 11px; }
+.verdict-icon {
+  width: 28px; height: 28px; flex: none; border-radius: 50%;
+  display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 15px;
+}
+.verdict-text { font-size: 16px; font-weight: 700; }
+/* The correction is the lesson, not a footnote — it is set larger than the verdict. */
+.verdict-answer { font-size: 21px; font-weight: 700; margin-top: 2px; letter-spacing: -.01em; }
+
+/* Letters the learner failed to type, highlighted inside the correct answer */
+.mark-missed {
+  color: var(--bad); font-weight: 800;
+  border-bottom: 3px solid currentColor;
+  padding-bottom: 1px;
+}
+
+/* Derivation trace — the reason this app exists */
+.why {
+  margin-bottom: 11px; padding: 12px 13px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border-radius: var(--r); border: 1px solid var(--line);
+}
+.why h4 {
+  font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 8px;
+}
+.why-step { display: flex; gap: 9px; align-items: baseline; padding: 3px 0; font-size: 13.5px; }
+.why-step b { flex: none; width: 92px; color: var(--ink-3); font-weight: 600; font-size: 12px; }
+.why-step span { color: var(--ink-2); }
+.why-step.accent span { color: var(--kz); font-weight: 700; font-size: 16px; }
+
+.note {
+  margin-top: 10px; padding: 11px 13px;
+  border-left: 3px solid var(--amb);
+  background: var(--warn-bg);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  font-size: 13.5px; color: var(--ink-2);
+}
+
+/* ------------------------------------------------------------------ *
+ * Completion
+ * ------------------------------------------------------------------ */
+
+.done { text-align: center; padding: 40px 16px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.done-mark { font-size: 62px; margin-bottom: 12px; animation: pop .5s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.done h2 { font-size: 25px; font-weight: 800; letter-spacing: -.02em; }
+.done p { color: var(--ink-2); margin-top: 5px; font-size: 14.5px; }
+
+.done-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 26px 0; }
+.done-stat { padding: 15px 8px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+.done-stat b { display: block; font-size: 23px; font-weight: 800; letter-spacing: -.02em; }
+.done-stat span { font-size: 11.5px; color: var(--ink-3); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ------------------------------------------------------------------ *
+ * Grammar reference & settings
+ * ------------------------------------------------------------------ */
+
+.rule { margin-bottom: 10px; padding: 15px; }
+.rule h3 { font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
+.rule > p { font-size: 13.5px; color: var(--ink-2); margin-top: 5px; }
+
+/* The full allomorph table — this is what a learner screenshots and keeps. */
+.grid {
+  width: 100%; margin-top: 12px;
+  border-collapse: separate; border-spacing: 0;
+  font-size: 13px;
+  display: block; overflow-x: auto;
+}
+.grid table { width: 100%; border-collapse: collapse; min-width: 320px; }
+.grid th, .grid td { padding: 7px 9px; text-align: left; border-bottom: 1px solid var(--line); }
+.grid th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); font-weight: 700; }
+.grid td:first-child { color: var(--ink-2); }
+.grid td b { color: var(--kz); font-weight: 700; }
+.grid tr:last-child td { border-bottom: none; }
+
+.setting {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 15px; border-bottom: 1px solid var(--line);
+}
+.setting:last-child { border-bottom: none; }
+.setting-label { font-size: 14.5px; font-weight: 600; }
+.setting-sub { font-size: 12px; color: var(--ink-3); margin-top: 1px; }
+
+.seg { display: flex; background: var(--surface-2); border-radius: var(--r-sm); padding: 3px; gap: 3px; }
+.seg button {
+  padding: 6px 13px; border-radius: 7px;
+  font-size: 13px; font-weight: 600; color: var(--ink-3);
+  transition: background .15s, color .15s;
+}
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-press); }
+
+.spark { display: flex; align-items: flex-end; gap: 5px; height: 54px; padding: 14px 15px 0; }
+.spark i {
+  flex: 1; border-radius: 3px 3px 0 0; min-height: 3px;
+  background: var(--kz); opacity: .85;
+}
+.spark i.empty { background: var(--line-2); }
+.spark-labels { display: flex; gap: 5px; padding: 5px 15px 14px; }
+.spark-labels span { flex: 1; text-align: center; font-size: 10px; color: var(--ink-3); font-weight: 600; }
